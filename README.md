@@ -48,7 +48,7 @@ This installs dependencies via `apt` / `dnf` / `pacman` / `zypper`,
 downloads the release tarball and runs the installer. Variants:
 
 ```bash
-curl -fsSL .../quick-install.sh | sudo bash -s -- 1.0.0      # pin a version
+curl -fsSL .../quick-install.sh | sudo bash -s -- 1.1.0      # pin a version
 curl -fsSL .../quick-install.sh | sudo bash -s -- --no-deps  # skip dependency install
 curl -fsSL .../quick-install.sh | sudo bash -s -- --uninstall
 ```
@@ -56,7 +56,7 @@ curl -fsSL .../quick-install.sh | sudo bash -s -- --uninstall
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (.deb)
 
 ```bash
-sudo apt install ./cleanmylinux_1.0.0_all.deb
+sudo apt install ./cleanmylinux_1.1.0_all.deb
 ```
 
 `apt` pulls in all dependencies.
@@ -66,7 +66,7 @@ sudo apt install ./cleanmylinux_1.0.0_all.deb
 Download `cleanmylinux-<version>-x86_64.flatpak` from the release page, then:
 
 ```bash
-flatpak install --user ./cleanmylinux-1.0.0-x86_64.flatpak
+flatpak install --user ./cleanmylinux-1.1.0-x86_64.flatpak
 flatpak run io.github.thuutien.CleanMyLinux
 ```
 
@@ -86,7 +86,7 @@ cd packaging/arch && makepkg -si
 ### Any distro (tarball)
 
 ```bash
-tar xzf cleanmylinux-1.0.0.tar.gz && cd cleanmylinux-1.0.0 && sudo ./install.sh
+tar xzf cleanmylinux-1.1.0.tar.gz && cd cleanmylinux-1.1.0 && sudo ./install.sh
 ```
 
 Needs Python 3 with GObject bindings, GTK 3, `psutil` and polkit. Remove it
