@@ -7,7 +7,7 @@ from gi.repository import GLib, Gtk
 
 from .. import __version__
 from ..core.utils import HOME, ROOT_FS, human_size
-from ..core import updates
+from ..core import selfupdate, updates
 from .pages.apps import UninstallerPage, UpdaterPage
 from .pages.cleanup import JunkPage, SmartScanPage
 from .pages.files import DuplicatesPage, LargeFilesPage
@@ -58,10 +58,29 @@ class MainWindow(Gtk.ApplicationWindow):
 
         header = Gtk.HeaderBar(show_close_button=True, title="CleanMyLinux")
         header.get_style_context().add_class("cml-header")
-        about = Gtk.Button.new_from_icon_name("help-about-symbolic", Gtk.IconSize.BUTTON)
-        about.set_relief(Gtk.ReliefStyle.NONE)
-        about.connect("clicked", self._about)
-        header.pack_end(about)
+        self.settings = selfupdate.load_settings()
+        menu = Gtk.Menu()
+        check = Gtk.MenuItem(label="Check for Updates…")
+        check.connect("activate", lambda *_: self.show_update_dialog())
+        auto = Gtk.CheckMenuItem(label="Check for Updates at Startup",
+                                 active=self.settings.get("auto_check", True))
+        auto.connect("toggled", self._toggle_auto_check)
+        about = Gtk.MenuItem(label="About CleanMyLinux")
+        about.connect("activate", self._about)
+        for item in (check, auto, Gtk.SeparatorMenuItem(), about):
+            menu.append(item)
+        menu.show_all()
+        menu_button = Gtk.MenuButton(popup=menu, relief=Gtk.ReliefStyle.NONE)
+        menu_button.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON))
+        menu_button.set_tooltip_text("Menu")
+        header.pack_end(menu_button)
+        # Shown when the startup check finds a newer release.
+        self.release = None
+        self.update_button = Gtk.Button(label="Update Available")
+        self.update_button.get_style_context().add_class("update-available")
+        self.update_button.set_no_show_all(True)
+        self.update_button.connect("clicked", lambda *_: self.show_update_dialog(self.release))
+        header.pack_end(self.update_button)
         self.set_titlebar(header)
 
         root = Gtk.Box()
@@ -133,6 +152,25 @@ class MainWindow(Gtk.ApplicationWindow):
         psutil.cpu_percent(None)
         GLib.timeout_add_seconds(2, self.refresh_stats)
         self.refresh_update_badge()
+        if self.settings.get("auto_check", True):
+            run_async(selfupdate.fetch_latest, self.on_release_checked)  # errors stay silent
+
+    def on_release_checked(self, release):
+        self.release = release
+        newer = selfupdate.is_newer(release.version)
+        self.update_button.set_label(f"Update to {release.version}")
+        self.update_button.set_visible(newer)
+
+    def show_update_dialog(self, release=None):
+        from .update_dialog import UpdateDialog
+        UpdateDialog(self, release).show()
+
+    def _toggle_auto_check(self, item):
+        self.settings["auto_check"] = item.get_active()
+        try:
+            selfupdate.save_settings(self.settings)
+        except OSError:
+            pass
 
     def set_badge(self, page_id, count):
         badge = self.rows[page_id].badge

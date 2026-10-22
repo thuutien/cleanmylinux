@@ -92,6 +92,18 @@ tar xzf cleanmylinux-1.0.0.tar.gz && cd cleanmylinux-1.0.0 && sudo ./install.sh
 Needs Python 3 with GObject bindings, GTK 3, `psutil` and polkit. Remove it
 again with `sudo ./install.sh --uninstall`.
 
+### Updating
+
+Open the menu (☰) and choose **Check for Updates…**. By default CleanMyLinux
+also checks at startup and shows an **Update to x.y.z** button when a new
+release is out. It downloads the package that matches how you installed it,
+verifies it against the SHA-256 checksum GitHub publishes, then installs it:
+
+- `.deb` and tarball installs: through `pkexec`, so you're asked for your password.
+- Flatpak: with `flatpak install`, no password needed.
+- Arch packages and source checkouts: you update those yourself. The dialog
+  links to the release page.
+
 ## Build the packages yourself
 
 ```bash
