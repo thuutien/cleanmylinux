@@ -9,7 +9,7 @@ depends=('python' 'python-gobject' 'gtk3' 'python-psutil' 'polkit')
 optdepends=('flatpak: list, update and remove Flatpak apps'
             'snapd: list, update and remove Snap packages')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/thuutien/cleanmylinux/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('5764c64442d4e8a14622d191c4cd7d7a977bb3af5fc5f0c38f4c56ef5a6274c7')
 
 package() {
   cd "$pkgname-$pkgver"
