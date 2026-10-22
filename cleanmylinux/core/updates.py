@@ -2,12 +2,10 @@
 
 import os
 import re
-import shutil
-import subprocess
 import time
 from dataclasses import dataclass, field
 
-from . import privileged
+from . import host, privileged
 
 APT_LISTS = "/var/lib/apt/lists"
 APT_LINE = re.compile(r"^(?P<name>[^/\s]+)/\S+\s+(?P<new>\S+)\s+\S+\s+\[upgradable from: (?P<old>[^\]]+)\]")
@@ -44,20 +42,19 @@ class UpdateGroup:
         return sum(u.size for u in self.updates)
 
 
-def _run(cmd):
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, env={**os.environ, "LANG": "C"})
-        return proc.stdout
-    except OSError:
-        return ""
+_run = host.output
 
 
 def lists_age():
     """Seconds since the APT package lists were last refreshed (None if unknown)."""
-    try:
-        newest = max((e.stat().st_mtime for e in os.scandir(APT_LISTS) if e.is_file()), default=None)
-    except OSError:
-        return None
+    if host.FLATPAK:
+        stamps = _run(["find", APT_LISTS, "-maxdepth", "1", "-type", "f", "-printf", "%T@\\n"]).split()
+        newest = max((float(s) for s in stamps), default=None)
+    else:
+        try:
+            newest = max((e.stat().st_mtime for e in os.scandir(APT_LISTS) if e.is_file()), default=None)
+        except OSError:
+            return None
     return None if newest is None else time.time() - newest
 
 
@@ -86,7 +83,7 @@ def _apt_sizes(updates):
 
 
 def apt_updates():
-    if not shutil.which("apt"):
+    if not host.which("apt"):
         return []
     updates = parse_apt(_run(["apt", "list", "--upgradable"]))
     _apt_sizes(updates)
@@ -105,7 +102,7 @@ def parse_flatpak(output, installation):
 
 
 def flatpak_updates():
-    if not shutil.which("flatpak"):
+    if not host.which("flatpak"):
         return []
     updates = []
     for scope in ("system", "user"):
@@ -115,7 +112,7 @@ def flatpak_updates():
 
 
 def snap_updates():
-    if not shutil.which("snap"):
+    if not host.which("snap"):
         return []
     updates = []
     for line in _run(["snap", "refresh", "--list"]).splitlines()[1:]:
@@ -128,7 +125,7 @@ def snap_updates():
 def check(refresh=False, progress=None):
     """Return non-empty UpdateGroups. refresh=True runs `apt-get update` as root first."""
     errors = []
-    if refresh and shutil.which("apt-get"):
+    if refresh and host.which("apt-get"):
         if progress:
             progress("Refreshing package lists (administrator password needed)…", 0.1)
         try:
@@ -174,8 +171,7 @@ def install(updates, progress=None):
         if ids:
             if progress:
                 progress(f"Updating {len(ids)} Flatpak item(s)…", 0.6)
-            proc = subprocess.run(["flatpak", "update", "-y", "--noninteractive", f"--{scope}", *ids],
-                                  capture_output=True, text=True)
+            proc = host.run(["flatpak", "update", "-y", "--noninteractive", f"--{scope}", *ids])
             if proc.returncode == 0:
                 done += len(ids)
             else:
@@ -184,7 +180,7 @@ def install(updates, progress=None):
     if snaps:
         if progress:
             progress("Refreshing snaps…", 0.85)
-        proc = subprocess.run(["snap", "refresh", *snaps], capture_output=True, text=True)
+        proc = host.run(["snap", "refresh", *snaps])
         if proc.returncode == 0:
             done += len(snaps)
         else:

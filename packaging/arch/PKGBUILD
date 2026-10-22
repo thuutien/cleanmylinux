@@ -1,0 +1,18 @@
+pkgname=cleanmylinux
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="CleanMyMac-style system cleaner, uninstaller and updater for Linux (GTK3)"
+arch=('any')
+url="https://github.com/thuutien/cleanmylinux"
+license=('MIT')
+depends=('python' 'python-gobject' 'gtk3' 'python-psutil' 'polkit')
+optdepends=('flatpak: list, update and remove Flatpak apps'
+            'snapd: list, update and remove Snap packages')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/thuutien/cleanmylinux/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "$pkgname-$pkgver"
+  sh install.sh --prefix-root "$pkgdir"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,37 @@
+name: Flatpak
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' cleanmylinux/__init__.py)" >> "$GITHUB_OUTPUT"
+
+      # Builds the bundle and uploads it as a workflow artifact on every push.
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: cleanmylinux-${{ steps.version.outputs.version }}-x86_64.flatpak
+          manifest-path: packaging/flatpak/io.github.thuutien.CleanMyLinux.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+
+      # On a version tag (e.g. v1.0.1), also attach the bundle to the GitHub release.
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cleanmylinux-${{ steps.version.outputs.version }}-x86_64.flatpak

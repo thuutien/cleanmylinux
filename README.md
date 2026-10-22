@@ -1,6 +1,23 @@
 # CleanMyLinux
 
-A CleanMyMac-style system cleaner for Linux, built with Python and GTK 3.
+A CleanMyMac-style cleaner, uninstaller and updater for **Linux**, built
+with Python + GTK3. It runs on any modern Linux desktop (Ubuntu, Debian,
+Linux Mint, Pop!_OS, Fedora, openSUSE, Arch and their derivatives) under
+GNOME, KDE Plasma, Cinnamon, Xfce, MATE and others.
+
+<p align="center">
+  <img src="docs/screenshots/smart-scan.png" alt="Smart Scan results" width="49%">
+  <img src="docs/screenshots/system-junk.png" alt="System Junk" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/space-lens.png" alt="Space Lens treemap" width="49%">
+  <img src="docs/screenshots/uninstaller.png" alt="Uninstaller" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/maintenance.png" alt="Maintenance tasks" width="49%">
+  <img src="docs/screenshots/optimization.png" alt="Login items" width="49%">
+</p>
+<p align="center"><em>Smart Scan · System Junk · Space Lens · Uninstaller · Maintenance · Optimization</em></p>
 
 ## Features
 
@@ -16,35 +33,105 @@ A CleanMyMac-style system cleaner for Linux, built with Python and GTK 3.
 | **Large & Old Files** | Finds big files and files you haven't used in over a year, grouped by type. |
 | **Duplicates** | Finds files that are byte-for-byte identical (by size, then a partial hash, then a full BLAKE2 hash). The oldest copy is always kept. |
 
-## Safety
+## Install
 
-- Files you pick in Large Files, Duplicates and Space Lens go to the **Trash**. They are not deleted outright.
-- Cache and Trash folders are emptied, not removed.
-- A hard guard refuses to delete `/`, `$HOME`, `~/.config`, `~/.local` and other system roots.
-- Admin tasks go through `pkexec` to a small helper (`cleanmylinux/core/helper.py`) that only accepts a fixed list of actions. You enter your password once per run.
-- Login items are changed through per-user overrides. System files are never edited.
+Get the files from the
+[latest release](https://github.com/thuutien/cleanmylinux/releases/latest).
 
-## Run
+### One-liner (any supported distro)
 
-Requires `python3-gi`, `gir1.2-gtk-3.0` and `python3-psutil`. These come preinstalled on Linux Mint, Ubuntu and most GNOME/Cinnamon desktops.
+```bash
+curl -fsSL https://raw.githubusercontent.com/thuutien/cleanmylinux/master/packaging/quick-install.sh | sudo bash
+```
+
+This installs dependencies via `apt` / `dnf` / `pacman` / `zypper`,
+downloads the release tarball and runs the installer. Variants:
+
+```bash
+curl -fsSL .../quick-install.sh | sudo bash -s -- 1.0.0      # pin a version
+curl -fsSL .../quick-install.sh | sudo bash -s -- --no-deps  # skip dependency install
+curl -fsSL .../quick-install.sh | sudo bash -s -- --uninstall
+```
+
+### Debian / Ubuntu / Linux Mint / Pop!_OS (.deb)
+
+```bash
+sudo apt install ./cleanmylinux_1.0.0_all.deb
+```
+
+`apt` pulls in all dependencies.
+
+### Flatpak (any distro)
+
+Download `cleanmylinux-<version>-x86_64.flatpak` from the release page, then:
+
+```bash
+flatpak install --user ./cleanmylinux-1.0.0-x86_64.flatpak
+flatpak run io.github.thuutien.CleanMyLinux
+```
+
+The Flatpak bundles the interface. Package management, process listing and
+admin tasks still use your system's own tools (`apt`, `flatpak`, `ps`,
+polkit, Python 3) through `flatpak-spawn --host`. Most desktops already have
+them. Flatpak bundles are built automatically by GitHub Actions on every push.
+
+### Arch Linux
+
+A `PKGBUILD` is in [`packaging/arch`](packaging/arch):
+
+```bash
+cd packaging/arch && makepkg -si
+```
+
+### Any distro (tarball)
+
+```bash
+tar xzf cleanmylinux-1.0.0.tar.gz && cd cleanmylinux-1.0.0 && sudo ./install.sh
+```
+
+Needs Python 3 with GObject bindings, GTK 3, `psutil` and polkit. Remove it
+again with `sudo ./install.sh --uninstall`.
+
+## Build the packages yourself
+
+```bash
+./packaging/build-deb.sh       # dist/cleanmylinux_<version>_all.deb
+./packaging/build-tarball.sh   # dist/cleanmylinux-<version>.tar.gz
+./packaging/build-flatpak.sh   # dist/cleanmylinux-<version>-x86_64.flatpak
+```
+
+The Flatpak build needs `flatpak-builder` and the GNOME 50 SDK from Flathub.
+
+## Run from source
 
 ```bash
 ./bin/cleanmylinux
 ```
 
-## Install (per user, no root)
+## How it works
 
-```bash
-./install.sh
-```
+- Scanning and cleaning live in `cleanmylinux/core` and have no GTK
+  dependency. The GTK interface is in `cleanmylinux/ui`.
+- Files you pick in Large Files, Duplicates and Space Lens go to the
+  **Trash**. They are not deleted outright. Cache and Trash folders are
+  emptied, not removed.
+- A hard guard refuses to delete `/`, `$HOME`, `~/.config`, `~/.local` and
+  other system roots.
+- Admin tasks run through `pkexec` to a small helper
+  (`/usr/lib/cleanmylinux/cleanmylinux-helper`, registered with polkit). It
+  only accepts a fixed list of actions and checks package names before
+  passing them to `apt-get`. You enter your password once per run.
+- Login items are changed through per-user overrides. System files are
+  never edited.
 
-This adds CleanMyLinux to your app menu. To remove it, run `./install.sh --uninstall`.
+## Limitations
 
-## Layout
+- APT is the only system package manager supported for uninstalling and
+  updating. On Fedora, openSUSE and Arch, those two modules only handle
+  Flatpak and Snap apps.
+- In the Flatpak build, Space Lens can only map your home folder, and the
+  Uninstaller can't detect leftovers from removed Flatpak apps.
 
-```
-cleanmylinux/
-  core/        scanners and cleaners (no GTK): junk, files, spacelens, apps, system, helper
-  ui/          GTK window, pages and style.css
-  data/        app icon
-```
+## License
+
+MIT. See [LICENSE](LICENSE).

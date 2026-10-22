@@ -5,7 +5,7 @@ import os
 import re
 from dataclasses import dataclass, field
 
-from . import privileged
+from . import host, privileged
 from .utils import HOME, Throttle, clear_contents, path_size, remove_path
 
 CACHE = os.path.join(HOME, ".cache")
@@ -170,22 +170,23 @@ def _trash(cancel):
     return cat
 
 
-def _system_junk(cancel):
-    cat = JunkCategory("system", "System Junk",
-                       "Package downloads, old system logs and crash reports. "
-                       "Requires your administrator password.", "dialog-password-symbolic",
-                       needs_root=True)
-    apt = sum(path_size(p) for p in glob.glob("/var/cache/apt/archives/*.deb")
-              + glob.glob("/var/cache/apt/archives/partial/*") + glob.glob("/var/cache/apt/*.bin"))
-    if apt:
-        cat.items.append(JunkItem("APT package cache", apt, mode="root", root_action="apt-clean",
-                                  detail="/var/cache/apt"))
-    journal = path_size("/var/log/journal", cancel)
-    excess = journal - 64 * 1000 * 1000
-    if excess > 0:
-        cat.items.append(JunkItem("Systemd journal (keep newest 64 MB)", excess, mode="root",
-                                  root_action="journal-vacuum", detail="/var/log/journal"))
-    rotated = 0
+def _host_glob_size(*patterns):
+    """Total size of files matching shell globs on the host system."""
+    if host.FLATPAK:
+        # $@ is left unquoted on purpose so the host shell expands the globs.
+        out = host.output(["sh", "-c", 'du -sbc -- $@ 2>/dev/null | tail -n 1', "sh", *patterns])
+        size = out.split("\t")[0].strip()
+        return int(size) if size.isdigit() else 0
+    return sum(path_size(p) for pattern in patterns for p in glob.glob(pattern))
+
+
+def _rotated_logs_size():
+    if host.FLATPAK:
+        out = host.output(["find", "/var/log", "-path", "/var/log/journal", "-prune", "-o", "-type", "f",
+                           "-regextype", "posix-extended", "-regex", r".*(\.(gz|xz|bz2|zst|old)|\.[0-9]+)$",
+                           "-printf", "%s\n"])
+        return sum(int(n) for n in out.split() if n.isdigit())
+    total = 0
     for root, dirs, files in os.walk("/var/log"):
         if root.startswith("/var/log/journal"):
             dirs[:] = []
@@ -193,13 +194,32 @@ def _system_junk(cancel):
         for name in files:
             if ROTATED.search(name):
                 try:
-                    rotated += os.lstat(os.path.join(root, name)).st_size
+                    total += os.lstat(os.path.join(root, name)).st_size
                 except OSError:
                     pass
+    return total
+
+
+def _system_junk(cancel):
+    cat = JunkCategory("system", "System Junk",
+                       "Package downloads, old system logs and crash reports. "
+                       "Requires your administrator password.", "dialog-password-symbolic",
+                       needs_root=True)
+    apt = _host_glob_size("/var/cache/apt/archives/*.deb", "/var/cache/apt/archives/partial/*",
+                          "/var/cache/apt/*.bin")
+    if apt:
+        cat.items.append(JunkItem("APT package cache", apt, mode="root", root_action="apt-clean",
+                                  detail="/var/cache/apt"))
+    journal = host.sizes(["/var/log/journal"])["/var/log/journal"]
+    excess = journal - 64 * 1000 * 1000
+    if excess > 0:
+        cat.items.append(JunkItem("Systemd journal (keep newest 64 MB)", excess, mode="root",
+                                  root_action="journal-vacuum", detail="/var/log/journal"))
+    rotated = _rotated_logs_size()
     if rotated:
         cat.items.append(JunkItem("Rotated system logs", rotated, mode="root",
                                   root_action="rotated-logs", detail="/var/log"))
-    crash = path_size("/var/crash")
+    crash = host.sizes(["/var/crash"])["/var/crash"]
     if crash:
         cat.items.append(JunkItem("System crash reports", crash, mode="root",
                                   root_action="crash-reports", detail="/var/crash"))

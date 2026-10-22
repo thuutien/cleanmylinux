@@ -3,18 +3,16 @@
 import configparser
 import glob
 import os
-import shutil
 import signal
-import subprocess
 from dataclasses import dataclass
 
 import psutil
 
-from . import privileged
+from . import host, privileged
 from .utils import HOME, clear_contents
 
 USER_AUTOSTART = os.path.join(HOME, ".config/autostart")
-SYSTEM_AUTOSTART = "/etc/xdg/autostart"
+SYSTEM_AUTOSTART = host.system_path("/etc/xdg/autostart")
 DESKTOP = os.environ.get("XDG_CURRENT_DESKTOP", "").replace("X-", "").split(":")
 
 
@@ -114,8 +112,24 @@ def remove_login_item(item):
 _proc_cache = {}
 
 
+def _host_processes(limit):
+    """The sandbox has its own PID namespace, so ask the host's ps instead."""
+    me = str(os.getuid())
+    rows = []
+    out = host.output(["ps", "-eo", "pid=,uid=,user:32=,pcpu=,rss=,comm=", "--sort=-pcpu"])
+    for line in out.splitlines():
+        parts = line.split(None, 5)
+        if len(parts) == 6:
+            pid, uid, user, cpu, rss, name = parts
+            rows.append((int(pid), name, user, float(cpu), int(rss) * 1024, uid == me))
+    rows.sort(key=lambda r: (-r[3], -r[4]))
+    return rows[:limit]
+
+
 def heavy_processes(limit=40):
     """Processes sorted by CPU then memory. First call primes CPU counters."""
+    if host.FLATPAK:
+        return _host_processes(limit)
     rows = []
     alive = set()
     me = os.getuid()
@@ -142,6 +156,11 @@ def heavy_processes(limit=40):
 
 
 def stop_process(pid, force=False):
+    if host.FLATPAK:
+        proc = host.run(["kill", "-KILL" if force else "-TERM", str(pid)])
+        if proc.returncode != 0:
+            raise PermissionError(proc.stderr.strip())
+        return
     os.kill(pid, signal.SIGKILL if force else signal.SIGTERM)
 
 
@@ -164,7 +183,7 @@ class Task:
     @property
     def available(self):
         if self.command:
-            return shutil.which(self.command[0]) is not None
+            return host.which(self.command[0]) is not None
         return True
 
 
@@ -177,10 +196,10 @@ def _desktop_db():
     out = []
     apps = os.path.join(HOME, ".local/share/applications")
     mime = os.path.join(HOME, ".local/share/mime")
-    if shutil.which("update-desktop-database") and os.path.isdir(apps):
-        out.append(subprocess.run(["update-desktop-database", apps], capture_output=True, text=True).stderr)
-    if shutil.which("update-mime-database") and os.path.isdir(mime):
-        out.append(subprocess.run(["update-mime-database", mime], capture_output=True, text=True).stderr)
+    if host.which("update-desktop-database") and os.path.isdir(apps):
+        out.append(host.run(["update-desktop-database", apps]).stderr)
+    if host.which("update-mime-database") and os.path.isdir(mime):
+        out.append(host.run(["update-mime-database", mime]).stderr)
     return "\n".join(o for o in out if o) or "Application and file-type databases refreshed"
 
 
@@ -220,7 +239,7 @@ def run_tasks(tasks, on_status):
             if task.func:
                 ok, out = True, task.func()
             else:
-                proc = subprocess.run(task.command, capture_output=True, text=True)
+                proc = host.run(task.command)
                 ok, out = proc.returncode == 0, (proc.stdout + proc.stderr).strip() or "Done"
         except Exception as exc:
             ok, out = False, str(exc)

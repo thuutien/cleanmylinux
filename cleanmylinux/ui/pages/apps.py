@@ -262,8 +262,9 @@ class UpdaterPage(ScanPage):
                     if update.security else ""
                 children.append((update, "", [f"<b>{esc(update.name)}</b>{badge}\n{muted(version)}",
                                               human_size(update.size) if update.size else ""]))
+            count = f"{len(group.updates)} update" + ("s" if len(group.updates) != 1 else "")
             self.tree.add_group(group, group.icon,
-                                [f"<b>{esc(group.name)}</b>  {muted(f"{len(group.updates)} update{'s' if len(group.updates) != 1 else ''}")}",
+                                [f"<b>{esc(group.name)}</b>  {muted(count)}",
                                  f"<b>{human_size(group.size)}</b>" if group.size else ""], children)
         self.tree.view.expand_all()
         self.window.set_badge("updater", sum(len(g.updates) for g in groups))

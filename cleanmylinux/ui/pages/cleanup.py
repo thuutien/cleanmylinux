@@ -4,7 +4,7 @@ import psutil
 from gi.repository import Gtk
 
 from ...core import junk, system
-from ...core.utils import HOME, human_size
+from ...core.utils import HOME, ROOT_FS, human_size
 from ..widgets import CheckTree, ScanPage, css_button, esc, icon, label, muted
 
 
@@ -75,7 +75,7 @@ class SmartScanPage(ScanPage):
         categories = junk.scan(progress, cancel)
         progress("Checking system health…", 0.95)
         mem = psutil.virtual_memory()
-        disk = psutil.disk_usage("/")
+        disk = psutil.disk_usage(ROOT_FS)
         home = psutil.disk_usage(HOME)
         items = system.login_items()
         heavy = [p for p in system.heavy_processes(200) if p[4] > 500 * 1000 * 1000]

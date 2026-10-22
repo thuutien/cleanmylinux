@@ -5,7 +5,7 @@ import threading
 
 from gi.repository import Gdk, GLib, GObject, Gtk, Pango, PangoCairo
 
-from ...core import spacelens
+from ...core import host, spacelens
 from ...core.utils import HOME, human_size, move_to_trash
 from ..widgets import (Hero, RoundButton, confirm, css_button, icon, idle, info, label,
                        run_async)
@@ -135,7 +135,8 @@ class SpaceLensPage(Gtk.Stack):
         chooser = Gtk.Box(spacing=8)
         chooser.set_halign(Gtk.Align.CENTER)
         group = None
-        for text, path in (("Home folder", HOME), ("Whole system disk", "/")):
+        targets = [("Home folder", HOME)] + ([] if host.FLATPAK else [("Whole system disk", "/")])
+        for text, path in targets:
             radio = Gtk.RadioButton.new_with_label_from_widget(group, text)
             radio.get_style_context().add_class("option-label")
             radio.connect("toggled", self._radio, path)

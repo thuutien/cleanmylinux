@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 
 HOME = str(Path.home())
+# The host's root filesystem; inside Flatpak "/" is the sandbox.
+ROOT_FS = "/run/host/usr" if os.path.exists("/.flatpak-info") else "/"
 
 # Paths we never delete, no matter what a scanner returns.
 PROTECTED = {

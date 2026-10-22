@@ -1,38 +1,57 @@
-#!/usr/bin/env bash
-# Install CleanMyLinux for the current user (no root needed).
-#   ./install.sh            install to ~/.local
-#   ./install.sh --uninstall
-set -euo pipefail
+#!/bin/sh
+# Install (or uninstall with --uninstall) CleanMyLinux system-wide.
+# Usage: sudo ./install.sh [--uninstall] [--prefix-root DIR]
+set -e
+
+ROOT=""
+UNINSTALL=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --uninstall) UNINSTALL=1 ;;
+        --prefix-root) ROOT="$2"; shift ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+LIB="$ROOT/usr/lib/cleanmylinux"
+BIN="$ROOT/usr/bin/cleanmylinux"
+DESKTOP="$ROOT/usr/share/applications/cleanmylinux.desktop"
+ICON="$ROOT/usr/share/icons/hicolor/scalable/apps/cleanmylinux.svg"
+POLICY="$ROOT/usr/share/polkit-1/actions/io.github.thuutien.cleanmylinux.policy"
+
+if [ "$UNINSTALL" = 1 ]; then
+    rm -rf "$LIB" "$BIN" "$DESKTOP" "$ICON" "$POLICY"
+    echo "CleanMyLinux uninstalled."
+    exit 0
+fi
+
+if [ -z "$ROOT" ] && [ "$(id -u)" != 0 ]; then
+    echo "Please run as root: sudo $0"
+    exit 1
+fi
+
 SRC="$(cd "$(dirname "$0")" && pwd)"
-PREFIX="${PREFIX:-$HOME/.local}"
-APP_DIR="$PREFIX/share/cleanmylinux"
 
-if [[ "${1:-}" == "--uninstall" ]]; then
-  rm -rf "$APP_DIR" "$PREFIX/bin/cleanmylinux" \
-    "$PREFIX/share/applications/cleanmylinux.desktop" \
-    "$PREFIX/share/icons/hicolor/scalable/apps/cleanmylinux.svg"
-  echo "CleanMyLinux removed."
-  exit 0
+rm -rf "$LIB/cleanmylinux"
+for dir in cleanmylinux cleanmylinux/core cleanmylinux/ui cleanmylinux/ui/pages cleanmylinux/data; do
+    install -d "$LIB/$dir"
+done
+install -m 644 "$SRC"/cleanmylinux/*.py "$LIB/cleanmylinux/"
+install -m 644 "$SRC"/cleanmylinux/core/*.py "$LIB/cleanmylinux/core/"
+install -m 644 "$SRC"/cleanmylinux/ui/*.py "$SRC/cleanmylinux/ui/style.css" "$LIB/cleanmylinux/ui/"
+install -m 644 "$SRC"/cleanmylinux/ui/pages/*.py "$LIB/cleanmylinux/ui/pages/"
+install -m 644 "$SRC/cleanmylinux/data/cleanmylinux.svg" "$LIB/cleanmylinux/data/"
+# The helper is what pkexec runs; its path must match the polkit policy.
+sed '1s|.*|#!/usr/bin/python3|' "$SRC/cleanmylinux/core/helper.py" > "$LIB/cleanmylinux-helper"
+chmod 755 "$LIB/cleanmylinux-helper"
+install -D -m 755 "$SRC/data/cleanmylinux-launcher" "$BIN"
+install -D -m 644 "$SRC/data/cleanmylinux.desktop" "$DESKTOP"
+install -D -m 644 "$SRC/cleanmylinux/data/cleanmylinux.svg" "$ICON"
+install -D -m 644 "$SRC/data/io.github.thuutien.cleanmylinux.policy" "$POLICY"
+
+if [ -z "$ROOT" ]; then
+    command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t /usr/share/icons/hicolor || true
+    command -v update-desktop-database >/dev/null && update-desktop-database -q /usr/share/applications || true
+    echo "CleanMyLinux installed. Launch it from the menu (System Tools > CleanMyLinux) or run: cleanmylinux"
 fi
-
-missing=()
-python3 -c 'import gi; gi.require_version("Gtk", "3.0")' 2>/dev/null || missing+=(python3-gi gir1.2-gtk-3.0)
-python3 -c 'import psutil' 2>/dev/null || missing+=(python3-psutil)
-if (( ${#missing[@]} )); then
-  echo "Missing dependencies. Install them with:"
-  echo "  sudo apt install ${missing[*]}"
-  exit 1
-fi
-
-mkdir -p "$APP_DIR" "$PREFIX/bin" "$PREFIX/share/applications" "$PREFIX/share/icons/hicolor/scalable/apps"
-rm -rf "$APP_DIR/cleanmylinux"
-cp -r "$SRC/cleanmylinux" "$APP_DIR/"
-find "$APP_DIR" -name __pycache__ -prune -exec rm -rf {} +
-install -m 755 "$SRC/bin/cleanmylinux" "$APP_DIR/cleanmylinux-launcher"
-mkdir -p "$APP_DIR/bin" && mv "$APP_DIR/cleanmylinux-launcher" "$APP_DIR/bin/cleanmylinux"
-ln -sf "$APP_DIR/bin/cleanmylinux" "$PREFIX/bin/cleanmylinux"
-install -m 644 "$SRC/cleanmylinux/data/cleanmylinux.svg" "$PREFIX/share/icons/hicolor/scalable/apps/cleanmylinux.svg"
-sed "s|^Exec=.*|Exec=$PREFIX/bin/cleanmylinux|" "$SRC/cleanmylinux.desktop" > "$PREFIX/share/applications/cleanmylinux.desktop"
-command -v update-desktop-database >/dev/null && update-desktop-database "$PREFIX/share/applications" || true
-gtk-update-icon-cache -q "$PREFIX/share/icons/hicolor" 2>/dev/null || true
-echo "CleanMyLinux installed. Launch it from your app menu or run: cleanmylinux"

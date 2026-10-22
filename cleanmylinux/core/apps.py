@@ -3,14 +3,12 @@
 import glob
 import os
 import re
-import shutil
-import subprocess
 from dataclasses import dataclass
 
-from . import privileged
+from . import host, privileged
 from .utils import HOME, path_size, remove_path
 
-APP_DIRS = ["/usr/share/applications", "/usr/local/share/applications"]
+APP_DIRS = [host.system_path(d) for d in ("/usr/share/applications", "/usr/local/share/applications")]
 UNITS = {"B": 1, "kB": 1e3, "KB": 1e3, "MB": 1e6, "GB": 1e9, "TB": 1e12}
 
 
@@ -29,12 +27,7 @@ class App:
     selected: bool = False
 
 
-def _run(cmd):
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, env={**os.environ, "LANG": "C"})
-        return proc.stdout
-    except OSError:
-        return ""
+_run = host.output
 
 
 def _parse_size(text):
@@ -64,16 +57,16 @@ def _desktop_info(path):
 
 
 def apt_apps():
-    if not shutil.which("dpkg-query"):
+    if not host.which("dpkg-query"):
         return []
     desktops = [p for d in APP_DIRS for p in glob.glob(os.path.join(d, "*.desktop"))]
     if not desktops:
         return []
     owners = {}
-    for line in _run(["dpkg", "-S", *desktops]).splitlines():
+    for line in _run(["dpkg", "-S", *map(host.real_path, desktops)]).splitlines():
         pkgs, _, path = line.partition(": ")
         if path:
-            owners[path.strip()] = pkgs.split(",")[0].strip().split(":")[0]
+            owners[host.system_path(path.strip())] = pkgs.split(",")[0].strip().split(":")[0]
     meta = {}
     fmt = "${Package}\t${Installed-Size}\t${Version}\t${Priority}\t${Essential}\t${binary:Summary}\n"
     for line in _run(["dpkg-query", "-W", "-f", fmt]).splitlines():
@@ -98,7 +91,7 @@ def apt_apps():
 
 
 def flatpak_apps():
-    if not shutil.which("flatpak"):
+    if not host.which("flatpak"):
         return []
     out = _run(["flatpak", "list", "--app", "--columns=application,name,version,size,installation"])
     apps = []
@@ -113,9 +106,10 @@ def flatpak_apps():
 
 
 def snap_apps():
-    if not shutil.which("snap"):
+    if not host.which("snap"):
         return []
     apps = []
+    rows = []
     for line in _run(["snap", "list"]).splitlines()[1:]:
         parts = line.split()
         if len(parts) < 4:
@@ -124,8 +118,10 @@ def snap_apps():
         notes = parts[-1]
         if name in ("snapd", "core") or "base" in notes or "core" in notes or name.startswith(("core", "gnome-", "gtk-common")):
             continue
-        size = path_size(f"/var/lib/snapd/snaps/{name}_{parts[2]}.snap")
-        apps.append(App("snap", name, name, "Snap package", version, size, f"snap.{name}"))
+        rows.append((name, version, f"/var/lib/snapd/snaps/{name}_{parts[2]}.snap"))
+    sizes = host.sizes([path for *_, path in rows])
+    for name, version, path in rows:
+        apps.append(App("snap", name, name, "Snap package", version, sizes.get(path, 0), f"snap.{name}"))
     return apps
 
 
@@ -176,12 +172,12 @@ def uninstall(apps, delete_data=False):
             cmd = ["flatpak", "uninstall", "-y", "--noninteractive", scope, app.id]
             if delete_data:
                 cmd.insert(2, "--delete-data")
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            proc = host.run(cmd)
             if proc.returncode != 0:
                 errors.append(f"{app.name}: {proc.stderr.strip()}")
         elif app.source == "snap":
             cmd = ["snap", "remove", app.id] + (["--purge"] if delete_data else [])
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            proc = host.run(cmd)
             if proc.returncode != 0:
                 errors.append(f"{app.name}: {proc.stderr.strip()}")
         elif app.source == "leftover":

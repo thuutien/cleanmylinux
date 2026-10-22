@@ -6,7 +6,7 @@ import psutil
 from gi.repository import GLib, Gtk
 
 from .. import __version__
-from ..core.utils import HOME, human_size
+from ..core.utils import HOME, ROOT_FS, human_size
 from ..core import updates
 from .pages.apps import UninstallerPage, UpdaterPage
 from .pages.cleanup import JunkPage, SmartScanPage
@@ -96,7 +96,7 @@ class MainWindow(Gtk.ApplicationWindow):
         for meter in (self.cpu_meter, self.ram_meter, self.disk_meter):
             stats.pack_start(meter, False, False, 0)
         self.home_meter = None
-        if psutil.disk_usage(HOME) and os.stat(HOME).st_dev != os.stat("/").st_dev:
+        if os.stat(HOME).st_dev != os.stat(ROOT_FS).st_dev:
             self.home_meter = Meter("Home")
             stats.pack_start(self.home_meter, False, False, 0)
         sidebar.pack_end(stats, False, False, 0)
@@ -173,7 +173,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.cpu_meter.set(cpu / 100, f"{cpu:.0f}%")
         mem = psutil.virtual_memory()
         self.ram_meter.set(mem.percent / 100, f"{human_size(mem.used)} / {human_size(mem.total)}")
-        disk = psutil.disk_usage("/")
+        disk = psutil.disk_usage(ROOT_FS)
         self.disk_meter.set(disk.percent / 100, f"{human_size(disk.free)} free")
         if self.home_meter:
             home = psutil.disk_usage(HOME)
