@@ -95,7 +95,7 @@ again with `sudo ./install.sh --uninstall`.
 ### Updating
 
 Open the menu (☰) and choose **Check for Updates…**. By default CleanMyLinux
-also checks at startup and shows an **Update to x.y.z** button when a new
+also checks at startup and shows an **Update available** card in the sidebar when a new
 release is out. It downloads the package that matches how you installed it,
 verifies it against the SHA-256 checksum GitHub publishes, then installs it:
 

@@ -74,13 +74,6 @@ class MainWindow(Gtk.ApplicationWindow):
         menu_button.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON))
         menu_button.set_tooltip_text("Menu")
         header.pack_end(menu_button)
-        # Shown when the startup check finds a newer release.
-        self.release = None
-        self.update_button = Gtk.Button(label="Update Available")
-        self.update_button.get_style_context().add_class("update-available")
-        self.update_button.set_no_show_all(True)
-        self.update_button.connect("clicked", lambda *_: self.show_update_dialog(self.release))
-        header.pack_end(self.update_button)
         self.set_titlebar(header)
 
         root = Gtk.Box()
@@ -119,6 +112,23 @@ class MainWindow(Gtk.ApplicationWindow):
             self.home_meter = Meter("Home")
             stats.pack_start(self.home_meter, False, False, 0)
         sidebar.pack_end(stats, False, False, 0)
+
+        # Shown above the stats when the startup check finds a newer release.
+        self.release = None
+        self.update_button = Gtk.Button(relief=Gtk.ReliefStyle.NONE)
+        self.update_button.get_style_context().add_class("update-card")
+        self.update_button.set_no_show_all(True)
+        self.update_button.connect("clicked", lambda *_: self.show_update_dialog(self.release))
+        card = Gtk.Box(spacing=10)
+        card.pack_start(icon("software-update-available-symbolic", 22), False, False, 0)
+        card_texts = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        card_texts.pack_start(label("Update available", "update-card-title", xalign=0), False, False, 0)
+        self.update_version = label("", "update-card-detail", xalign=0)
+        card_texts.pack_start(self.update_version, False, False, 0)
+        card.pack_start(card_texts, True, True, 0)
+        card.show_all()
+        self.update_button.add(card)
+        sidebar.pack_end(self.update_button, False, False, 10)
         root.pack_start(sidebar, False, False, 0)
 
         # Pages
@@ -158,7 +168,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_release_checked(self, release):
         self.release = release
         newer = selfupdate.is_newer(release.version)
-        self.update_button.set_label(f"Update to {release.version}")
+        self.update_version.set_text(f"Version {release.version} · Click to install")
         self.update_button.set_visible(newer)
 
     def show_update_dialog(self, release=None):

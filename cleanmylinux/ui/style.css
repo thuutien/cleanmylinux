@@ -43,15 +43,6 @@ window.cml .titlebar:backdrop {
 headerbar.cml-header .title { color: rgba(255, 255, 255, 0.0); }
 headerbar.cml-header button { color: rgba(255, 255, 255, 0.85); background: transparent; border: none; box-shadow: none; }
 headerbar.cml-header button:hover { background-color: rgba(255, 255, 255, 0.12); }
-headerbar.cml-header button.update-available {
-  background-color: rgba(255, 255, 255, 0.92);
-  color: #2a1b47;
-  border-radius: 999px;
-  padding: 2px 14px;
-  font-weight: 700;
-}
-headerbar.cml-header button.update-available label { color: #2a1b47; }
-headerbar.cml-header button.update-available:hover { background-color: #ffffff; }
 .update-title { font-size: 16px; }
 
 /* Sidebar ------------------------------------------------------------- */
@@ -90,6 +81,19 @@ list.nav row:selected label, list.nav row:selected image { color: #ffffff; }
   color: rgba(255, 255, 255, 0.45);
   padding: 14px 12px 4px 12px;
 }
+
+button.update-card {
+  background-color: rgba(255, 255, 255, 0.14);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 10px 12px;
+  color: #ffffff;
+}
+button.update-card:hover { background-color: rgba(255, 255, 255, 0.22); }
+.update-card-title { font-weight: 800; font-size: 13px; }
+.update-card-detail { font-size: 11px; color: rgba(255, 255, 255, 0.72); }
 
 .stats {
   background-color: rgba(0, 0, 0, 0.18);
