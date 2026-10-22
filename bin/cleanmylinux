@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Launch CleanMyLinux from a source checkout or an installed copy.
+HERE="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+export PYTHONPATH="$HERE${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m cleanmylinux "$@"

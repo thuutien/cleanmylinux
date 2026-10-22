@@ -1,0 +1,228 @@
+/* CleanMyLinux – CleanMyMac-inspired look. Each page tints the whole window. */
+
+window.cml {
+  background-color: #2a1b47;
+  background-image: linear-gradient(150deg, #4b2a7d 0%, #2a1b47 55%, #1a1230 100%);
+  color: #ffffff;
+}
+window.cml.page-smart       { background-image: linear-gradient(150deg, #8a3b8f 0%, #4b2a7d 50%, #1d1338 100%); }
+window.cml.page-junk        { background-image: linear-gradient(150deg, #13a389 0%, #146a6e 50%, #0d2a3a 100%); }
+window.cml.page-optimization{ background-image: linear-gradient(150deg, #e2733b 0%, #a2384f 50%, #3a1532 100%); }
+window.cml.page-maintenance { background-image: linear-gradient(150deg, #2f80ed 0%, #3a4fb5 50%, #1a1f4d 100%); }
+window.cml.page-uninstaller { background-image: linear-gradient(150deg, #1fa2ff 0%, #12728f 50%, #0f2a3d 100%); }
+window.cml.page-updater     { background-image: linear-gradient(150deg, #00b09b 0%, #2a7f9e 50%, #142b45 100%); }
+window.cml.page-spacelens   { background-image: linear-gradient(150deg, #6a4cdb 0%, #3b2d8f 50%, #17143d 100%); }
+window.cml.page-large       { background-image: linear-gradient(150deg, #c0458a 0%, #6b2f8f 50%, #241540 100%); }
+window.cml.page-duplicates  { background-image: linear-gradient(150deg, #d4497a 0%, #8a2f6b 50%, #2b1235 100%); }
+
+
+/* Titlebar mirrors the top edge of each page gradient. */
+window.cml headerbar.cml-header { background-image: linear-gradient(90deg, #4b2a7d, #3a2163); }
+window.cml.page-smart headerbar.cml-header { background-image: linear-gradient(90deg, #8a3b8f, #4b2a7d); }
+window.cml.page-junk headerbar.cml-header { background-image: linear-gradient(90deg, #13a389, #146a6e); }
+window.cml.page-optimization headerbar.cml-header { background-image: linear-gradient(90deg, #e2733b, #a2384f); }
+window.cml.page-maintenance headerbar.cml-header { background-image: linear-gradient(90deg, #2f80ed, #3a4fb5); }
+window.cml.page-uninstaller headerbar.cml-header { background-image: linear-gradient(90deg, #1fa2ff, #12728f); }
+window.cml.page-updater headerbar.cml-header { background-image: linear-gradient(90deg, #00b09b, #2a7f9e); }
+window.cml.page-spacelens headerbar.cml-header { background-image: linear-gradient(90deg, #6a4cdb, #3b2d8f); }
+window.cml.page-large headerbar.cml-header { background-image: linear-gradient(90deg, #c0458a, #6b2f8f); }
+window.cml.page-duplicates headerbar.cml-header { background-image: linear-gradient(90deg, #d4497a, #8a2f6b); }
+
+window.cml * { color: inherit; }
+
+window.cml headerbar.cml-header,
+window.cml headerbar.cml-header:backdrop,
+window.cml .titlebar,
+window.cml .titlebar:backdrop {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  min-height: 38px;
+  color: rgba(255, 255, 255, 0.85);
+}
+headerbar.cml-header .title { color: rgba(255, 255, 255, 0.0); }
+headerbar.cml-header button { color: rgba(255, 255, 255, 0.85); background: transparent; border: none; box-shadow: none; }
+headerbar.cml-header button:hover { background-color: rgba(255, 255, 255, 0.12); }
+
+/* Sidebar ------------------------------------------------------------- */
+.sidebar {
+  background-color: rgba(0, 0, 0, 0.22);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0 10px 14px 10px;
+}
+.brand { font-size: 17px; font-weight: 800; letter-spacing: 0.3px; }
+list.nav, list.nav row { background: transparent; }
+list.nav row {
+  padding: 9px 12px;
+  border-radius: 10px;
+  margin: 1px 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+list.nav row:hover { background-color: rgba(255, 255, 255, 0.08); }
+list.nav row:selected {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+}
+list.nav row:selected label, list.nav row:selected image { color: #ffffff; }
+.nav-badge {
+  background-color: #ff5f7e;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.nav-header {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 14px 12px 4px 12px;
+}
+
+.stats {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  padding: 12px;
+}
+.meter-title { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.7); }
+.meter-value { font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+levelbar trough { background-color: rgba(255, 255, 255, 0.12); border: none; border-radius: 4px; min-height: 5px; }
+levelbar block.filled {
+  background-color: #7ee8c1;
+  background-image: linear-gradient(90deg, #5ee7df, #b490ca);
+  border: none; border-radius: 4px; min-height: 5px;
+}
+levelbar.hot block.filled { background-image: linear-gradient(90deg, #f6d365, #fd6e6a); }
+
+/* Typography -------------------------------------------------------- */
+.hero-icon { color: rgba(255, 255, 255, 0.92); -gtk-icon-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); }
+.hero-title { font-size: 30px; font-weight: 800; }
+.hero-subtitle { font-size: 14px; color: rgba(255, 255, 255, 0.72); }
+.result-title { font-size: 26px; font-weight: 800; }
+.section-label { font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.8); }
+.dim { color: rgba(255, 255, 255, 0.6); font-size: 12px; }
+.option-label, .option-label label { color: rgba(255, 255, 255, 0.85); }
+.chip {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-weight: 600;
+}
+
+/* Buttons ----------------------------------------------------------- */
+button.round-button {
+  border-radius: 999px;
+  padding: 0;
+  min-width: 96px;
+  min-height: 96px;
+  background-color: rgba(255, 255, 255, 0.18);
+  background-image: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 70%);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: all 150ms ease-out;
+}
+button.round-button:hover {
+  background-image: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.2) 70%);
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.08);
+}
+button.round-button:active { background-image: radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.1) 70%); }
+button.round-button:disabled { opacity: 0.45; background-color: rgba(255, 255, 255, 0.08); }
+.round-main { font-size: 19px; font-weight: 800; }
+.round-sub { font-size: 11.5px; color: rgba(255, 255, 255, 0.85); }
+
+button.pill {
+  border-radius: 999px;
+  padding: 6px 18px;
+  background-color: rgba(255, 255, 255, 0.92);
+  background-image: none;
+  color: #2a1b47;
+  border: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-weight: 700;
+}
+button.pill label, button.pill image { color: #2a1b47; }
+button.pill.flat-pill {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: none;
+}
+button.pill.flat-pill label, button.pill.flat-pill image { color: #ffffff; }
+button.pill.flat-pill:hover { background-color: rgba(255, 255, 255, 0.22); }
+button.pill.small { padding: 4px 12px; font-size: 12.5px; }
+button.pill.danger { background-color: rgba(255, 90, 90, 0.35); }
+button.pill.danger:hover { background-color: rgba(255, 90, 90, 0.55); }
+
+button.crumb { padding: 2px 6px; border-radius: 6px; font-weight: 600; color: #fff; background: transparent; border: none; box-shadow: none; }
+button.crumb:hover { background-color: rgba(255, 255, 255, 0.12); }
+.crumb-sep { color: rgba(255, 255, 255, 0.4); }
+
+radiobutton.tab, button.tab, stackswitcher.tabs button {
+  border-radius: 999px;
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.85);
+  margin-right: 4px;
+}
+button.tab:checked, stackswitcher.tabs button:checked {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #2a1b47;
+}
+button.tab:checked label, stackswitcher.tabs button:checked label { color: #2a1b47; }
+stackswitcher.tabs { margin-bottom: 2px; }
+
+/* Lists ------------------------------------------------------------- */
+.card {
+  background-color: rgba(0, 0, 0, 0.22);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.card treeview.view, .card list, .card viewport, .card textview text {
+  background-color: transparent;
+  color: #ffffff;
+}
+.card treeview.view { padding: 2px 0; }
+.card treeview.view:selected { background-color: rgba(255, 255, 255, 0.16); color: #ffffff; }
+.card treeview.view:hover { background-color: rgba(255, 255, 255, 0.05); }
+.card treeview.view header button {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 8px;
+}
+.card list row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.card list row:hover { background-color: rgba(255, 255, 255, 0.05); }
+.card treeview.view.progressbar { background-color: #8fb8e8; background-image: linear-gradient(90deg, #5ee7df, #b490ca); border: none; border-radius: 4px; color: #ffffff; }
+.card treeview.view.trough { background-color: rgba(255, 255, 255, 0.07); background-image: none; border: none; border-radius: 4px; color: #ffffff; }
+
+.tile {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+}
+.tile-title { font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.7); letter-spacing: 1px; }
+.tile-value { font-size: 24px; font-weight: 800; }
+.tile-detail { font-size: 12.5px; color: rgba(255, 255, 255, 0.7); }
+
+textview.log text { background-color: rgba(0, 0, 0, 0.25); color: rgba(255, 255, 255, 0.85); }
+expander title { color: rgba(255, 255, 255, 0.8); }
+progressbar trough { background-color: rgba(255, 255, 255, 0.15); border: none; min-height: 6px; border-radius: 3px; }
+progressbar progress { background-image: linear-gradient(90deg, #5ee7df, #b490ca); border: none; min-height: 6px; border-radius: 3px; }
+spinner { color: #ffffff; }
+.ok-icon { color: #7ee8a1; }
+.error-icon { color: #ff8a8a; }
+entry { background-color: rgba(255, 255, 255, 0.12); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; box-shadow: none; }
+scrollbar { background: transparent; border: none; }
+scrollbar slider { background-color: rgba(255, 255, 255, 0.3); }
+paned separator { background: transparent; min-width: 10px; }

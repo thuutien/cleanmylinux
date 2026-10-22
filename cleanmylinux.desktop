@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=CleanMyLinux
+GenericName=System Cleaner
+Comment=Clean junk, uninstall apps and keep your Linux fast
+Exec=cleanmylinux
+Icon=cleanmylinux
+Terminal=false
+Categories=System;Utility;
+Keywords=clean;junk;cache;uninstall;disk;space;optimize;
+StartupWMClass=cleanmylinux
